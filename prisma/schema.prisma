@@ -1,0 +1,101 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+      provider = "prisma-client-js"
+    }
+
+    datasource db {
+      provider = "postgresql"
+      url      = env("DATABASE_URL")
+    }
+
+model Doctor {
+      id        String    @id @default(cuid())
+      name      String
+      patients  Patient[]
+    }
+
+model User {
+      id       String @id @default(cuid())
+      username String @unique
+      password String
+      role     String // admin or doctor
+      email    String @unique
+      phone    String
+    }
+
+model Patient {
+      id                  String                @id
+      name                String
+      dob                 String
+      address             String
+      phone               String
+      treatingDoctorId    String
+      treatingDoctor      Doctor                @relation(fields: [treatingDoctorId], references: [id])
+      appointments        Appointment[]
+      diagnosis           Diagnosis?
+      treatments          Treatment[]
+      imagingDiagnostics  ImagingDiagnostic[]
+      aiAnalysisHistory   AIAnalysisHistoryItem[]
+    }
+
+model Diagnosis {
+      id                  String    @id @default(cuid())
+      patientId           String    @unique
+      patient             Patient   @relation(fields: [patientId], references: [id])
+      date                String
+      gleasonScore        String
+      tStage              String
+      nStage              String
+      mStage              String
+      initialPSA          Float?
+      initialFreePSA      Float?
+      initialTestosterone Float?
+    }
+
+model Appointment {
+      id        String   @id
+      patientId String
+      patient   Patient  @relation(fields: [patientId], references: [id])
+      date      String
+      status    String // scheduled, completed, missed
+      notes     String?
+    }
+
+model Treatment {
+      id          String  @id @default(cuid())
+      patientId   String
+      patient     Patient @relation(fields: [patientId], references: [id])
+      date        String
+      medication  String
+      notes       String
+      labTestJson String  // Lưu trữ LabTest dưới dạng chuỗi JSON
+    }
+
+model ImagingDiagnostic {
+      id          String  @id
+      patientId   String
+      patient     Patient @relation(fields: [patientId], references: [id])
+      date        String
+      type        String
+      imageId     String
+      imageUrl    String?
+      results     String
+      radiologist String
+    }
+
+model AIAnalysisHistoryItem {
+      id                      String @id @default(cuid())
+      patientId               String
+      patient                 Patient @relation(fields: [patientId], references: [id])
+      date                    String
+      recurrenceRisk          String
+      treatmentRecommendations String
+      currentProtocolsJson    String // Lưu trữ Protocol[] dưới dạng JSON
+      summary                 String
+      supportingGuidelinesJson String // Lưu trữ string[] dưới dạng JSON
+    }
